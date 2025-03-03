@@ -1,33 +1,33 @@
-using AutoMapper;
-using Pacagroup.Ecommerce.Transversal.Mapper;
-using Pacagroup.Ecommerce.Transversal.Common;
-using Pacagroup.Ecommerce.Infraestructura.Data;
-using Pacagroup.Ecommerce.Infraestructura.Repository;
-using Pacagroup.Ecommerce.Infraestructura.Interface;
-using Pacagroup.Ecommerce.Domain.Interface;
-using Pacagroup.Ecommerce.Domain.Core;
-using Pacagroup.Ecommerce.Application.Interface;
-using Pacagroup.Ecommerce.Application.Main;
-using System.Reflection;
+using Pacagroup.Ecommerce.Services.WebApi.Helpers;
+using System.Text;
+using Pacagroup.Ecommerce.Services.WebApi.Modules.Swagger;
+using Pacagroup.Ecommerce.Services.WebApi.Modules.Authentication;
+using Pacagroup.Ecommerce.Services.WebApi.Modules.Validator;
+using Pacagroup.Ecommerce.Services.WebApi.Modules.Mapper;
+using Pacagroup.Ecommerce.Services.WebApi.Modules.Injection;
+using Pacagroup.Ecommerce.Services.WebApi.Modules.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+//Settings
+builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("Config"));
 
-// Configure AutoMapper
-builder.Services.AddAutoMapper(typeof(Pacagroup.Ecommerce.Transversal.Mapper.MappingsProfile));
+builder.Services.AddMapper();
 
-// Register Services as Singleton
-builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
-builder.Services.AddSingleton<IConnectionFactory, ConnectionFactory>();
-builder.Services.AddScoped<ICustomersApplication, CustomersApplication>();
-builder.Services.AddScoped<ICustomersDomain, CustomersDomain>();
-builder.Services.AddScoped<ICustomersRepository, CustomersRepository>();
+builder.Services.AddInjection(builder.Configuration);
+
+builder.Services.AddAuthentication(builder.Configuration);
+
+//./Modules/Swagger/ConfigureSwaggerOptions.cs
+builder.Services.AddVersioning();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwagger();
+
+builder.Services.AddValidator();
 
 var app = builder.Build();
 
@@ -37,8 +37,22 @@ if (app.Environment.IsDevelopment())
 
 }
 
+app.UseCors(builder =>
+{
+    // Cualquier Origen
+    builder.AllowAnyOrigin();
+    builder.AllowAnyMethod();
+    builder.AllowAnyHeader();
+});
+
+app.UseAuthentication();
+
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(o => 
+{
+    o.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
+    o.SwaggerEndpoint("/swagger/v2/swagger.json", "API v2");
+});
 
 app.UseAuthorization();
 
