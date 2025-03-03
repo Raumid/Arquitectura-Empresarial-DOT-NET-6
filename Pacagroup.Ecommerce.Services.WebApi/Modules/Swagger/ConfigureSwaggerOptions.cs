@@ -40,6 +40,11 @@ namespace Pacagroup.Ecommerce.Services.WebApi.Modules.Swagger
                 }
             };
 
+            if (description.IsDeprecated)
+            {
+                info.Description += "\n  Esta versión de la API ha quedado obsoleta";
+            }
+
             return info;
         }
     }
