@@ -1,11 +1,13 @@
 using Pacagroup.Ecommerce.Services.WebApi.Helpers;
-using System.Text;
 using Pacagroup.Ecommerce.Services.WebApi.Modules.Swagger;
 using Pacagroup.Ecommerce.Services.WebApi.Modules.Authentication;
 using Pacagroup.Ecommerce.Services.WebApi.Modules.Validator;
 using Pacagroup.Ecommerce.Services.WebApi.Modules.Mapper;
 using Pacagroup.Ecommerce.Services.WebApi.Modules.Injection;
 using Pacagroup.Ecommerce.Services.WebApi.Modules.Versioning;
+using Pacagroup.Ecommerce.Services.WebApi.Modules.HealthCheck;
+using HealthChecks.UI.Client;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,13 +31,16 @@ builder.Services.AddSwagger();
 
 builder.Services.AddValidator();
 
+builder.Services.AddHealthCheck(builder.Configuration);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline. 
 if (app.Environment.IsDevelopment())
 {
-
+    app.UseDeveloperExceptionPage();
 }
+
 
 app.UseCors(builder =>
 {
@@ -50,12 +55,24 @@ app.UseAuthentication();
 app.UseSwagger();
 app.UseSwaggerUI(o => 
 {
-    o.SwaggerEndpoint("/swagger/v1/swagger.json", "API v1");
-    o.SwaggerEndpoint("/swagger/v2/swagger.json", "API v2");
+    var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+    foreach (var description in provider.ApiVersionDescriptions)
+    {
+        o.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json", description.GroupName.ToLowerInvariant());
+    }
 });
 
 app.UseAuthorization();
 
 app.MapControllers();
 
+app.MapHealthChecksUI();
+app.MapHealthChecks("/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => true,
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+});
+
 app.Run();
+
+public partial class Program { };
