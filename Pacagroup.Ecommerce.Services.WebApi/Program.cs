@@ -6,8 +6,10 @@ using Pacagroup.Ecommerce.Services.WebApi.Modules.Mapper;
 using Pacagroup.Ecommerce.Services.WebApi.Modules.Injection;
 using Pacagroup.Ecommerce.Services.WebApi.Modules.Versioning;
 using Pacagroup.Ecommerce.Services.WebApi.Modules.HealthCheck;
+using Pacagroup.Ecommerce.Services.WebApi.Modules.Redis;
 using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Mvc.ApiExplorer;
+using Pacagroup.Ecommerce.Services.WebApi.Modules.RateLimiter;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +35,12 @@ builder.Services.AddValidator();
 
 builder.Services.AddHealthCheck(builder.Configuration);
 
+// ./Modules/Redis
+builder.Services.AddRedisCache(builder.Configuration);
+
+// ./Modules/RateLimiting
+builder.Services.AddRateLimiting(builder.Configuration);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline. 
@@ -49,7 +57,7 @@ app.UseCors(builder =>
     builder.AllowAnyMethod();
     builder.AllowAnyHeader();
 });
-
+app.UseRouting();
 app.UseAuthentication();
 
 app.UseSwagger();
@@ -63,6 +71,8 @@ app.UseSwaggerUI(o =>
 });
 
 app.UseAuthorization();
+app.UseRateLimiter();
+app.UseEndpoints(_ => { });
 
 app.MapControllers();
 

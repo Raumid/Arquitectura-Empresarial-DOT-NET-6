@@ -11,6 +11,7 @@ namespace Pacagroup.Ecommerce.Transversal.Mapper
             CreateMap<Customers, CustomersDto>().ReverseMap();
 
             CreateMap<Users, UsersDTO>().ReverseMap();
+            CreateMap<Categories, CategoriesDto>().ReverseMap();
             /**
              * Automaper con propiedades que sean distintas en el nombre
              */

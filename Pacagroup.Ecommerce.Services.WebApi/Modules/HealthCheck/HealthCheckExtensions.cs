@@ -4,7 +4,9 @@
     {
         public static IServiceCollection AddHealthCheck(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddHealthChecks().AddSqlServer(configuration.GetConnectionString("NorthwindConnection"), tags: new[] { "database"});
+            services.AddHealthChecks()
+                .AddSqlServer(configuration.GetConnectionString("NorthwindConnection"), tags: new[] { "database"})
+                .AddRedis(configuration.GetConnectionString("RedisConnection"), tags: new[] { "cache" });
             services.AddHealthChecksUI().AddInMemoryStorage();
 
             return services;
